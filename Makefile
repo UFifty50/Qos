@@ -18,7 +18,10 @@ os: boot kernel
 clean:
 	-rm -f *.o boot/*.o *.bin
 
-push: /usr/bin/git
+push:
 	git add .
 	git commit
 	git push
+
+run: 
+	./run.sh
