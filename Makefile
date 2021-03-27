@@ -1,27 +1,34 @@
-CC=i686-elf-gcc
-AS=nasm
-BOOT_DIR=boot/
+kernel_source_files := $(shell find kernel/ -name *.c)
+kernel_object_files := $(patsubst kernel/%.c, build/kernel/%.o, $(kernel_source_files))
 
-.PHONY: all kernel boot
+x86_64_c_source_files := $(shell find x86_64/ -name *.c)
+x86_64_c_object_files := $(patsubst x86_64/%.c, build/x86_64/%.o, $(x86_64_c_source_files))
 
-default: os
+x86_64_asm_source_files := $(shell find x86_64/ -name *.asm)
+x86_64_asm_object_files := $(patsubst x86_64/%.asm, build/x86_64/%.o, $(x86_64_asm_source_files))
 
-kernel: kernel.c
-	$(CC) -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+x86_64_object_files := $(x86_64_c_object_files) $(x86_64_asm_object_files)
 
-boot: $(BOOT_DIR)boot.asm
-	$(AS) -felf32 boot/boot.asm -o boot/boot.o
+CFLAGS := -c -std=gnu99 -I include/ -ffreestanding
 
-os: boot kernel
-	$(CC) -T linker.ld -o Qos.bin -ffreestanding -O2 -nostdlib $(BOOT_DIR)boot.o kernel.o -lgcc
+default: build-x86_64
 
-clean:
-	-rm -f *.o boot/*.o *.bin
+$(kernel_object_files): build/kernel/%.o : kernel/%.c
+	mkdir -p $(dir $@) && \
+	x86_64-elf-gcc $(CFLAGS) $(patsubst build/kernel/%.o, kernel/%.c, $@) -o $@
 
-push:
-	git add .
-	git commit
-	git push
+$(x86_64_c_object_files): build/x86_64/%.o : x86_64/%.c
+	mkdir -p $(dir $@) && \
+	x86_64-elf-gcc $(CFLAGS) $(patsubst build/x86_64/%.o, x86_64/%.c, $@) -o $@
 
-run: 
-	./run.sh
+$(x86_64_asm_object_files): build/x86_64/%.o : x86_64/%.asm
+	mkdir -p $(dir $@) && \
+	nasm -f elf64 $(patsubst build/x86_64/%.o, x86_64/%.asm, $@) -o $@
+
+.PHONY: build-x86_64
+build-x86_64: $(kernel_object_files) $(x86_64_object_files)
+	mkdir -p dist/x86_64 && \
+	x86_64-elf-ld -n -o dist/x86_64/QosK.bin -T targets/x86_64/linker.ld $(kernel_object_files) $(x86_64_object_files) && \
+	cp dist/x86_64/kernel.bin targets/x86_64/iso/boot/kernel.bin && \
+	grub-mkrescue /usr/lib/grub/i386-pc -o dist/x86_64/kernel.iso targets/x86_64/iso
+
