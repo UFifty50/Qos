@@ -1,1 +1,6 @@
+toolchain/
+os-tutorial/
+backups/
+*.bin
 *.o
+*.swp
