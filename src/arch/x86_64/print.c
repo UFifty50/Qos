@@ -14,13 +14,10 @@ size_t row = 0;
 uint8_t colour = COLOUR_WHITE | COLOUR_BLACK << 4;
 
 void clear_row(size_t row) {
-	struct Char empty = (struct Char) {
-		character: ' ',
-		colour: colour,
-	};
+	struct Char empty = (struct Char) { ' ', colour };
 
 	for (size_t col = 0; col < NUM_COLS; col++) {
-	buffer[col + NUM_COLS * row] = empty;
+	    buffer[col + NUM_COLS * row] = empty;
 	}
 }
 
@@ -59,8 +56,8 @@ void print_char(char character) {
 	}
 
 	buffer[col + NUM_COLS * row] = (struct Char) {
-		character: (uint8_t) character,
-		colour: colour,
+		(uint8_t) character,
+		colour,
 	};
 
 	col++;

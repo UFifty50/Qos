@@ -1,0 +1,6 @@
+{
+    "sonarlint.pathToCompileCommands": "${workspaceFolder}\\compile_commands.json",
+    "files.associations": {
+        "print.h": "c"
+    }
+}
